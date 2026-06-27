@@ -1,0 +1,27 @@
+{
+  "name": "shaderbox",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A local Shadertoy-style playground for WebGPU/WGSL compute, vertex and fragment shaders.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "monaco-editor": "^0.52.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@webgpu/types": "^0.1.52",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
