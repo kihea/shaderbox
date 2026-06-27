@@ -1,16 +1,17 @@
 import MonacoEditor from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useEffect, useRef } from "react";
-import { registerWgsl } from "./wgslLanguage";
-import type { ShaderError } from "../engine/types";
+import { registerLanguages } from "./wgslLanguage";
+import type { ShaderBackend, ShaderError } from "../engine/types";
 
 interface Props {
   code: string;
+  backend: ShaderBackend;
   errors: ShaderError[];
   onChange: (code: string) => void;
 }
 
-export function Editor({ code, errors, onChange }: Props) {
+export function Editor({ code, backend, errors, onChange }: Props) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import("monaco-editor") | null>(null);
 
@@ -42,10 +43,10 @@ export function Editor({ code, errors, onChange }: Props) {
   return (
     <div className="editor">
       <MonacoEditor
-        language="wgsl"
+        language={backend === "webgpu" ? "wgsl" : "glsl"}
         theme="vs-dark"
         value={code}
-        beforeMount={(monaco) => registerWgsl(monaco)}
+        beforeMount={(monaco) => registerLanguages(monaco)}
         onMount={(ed, monaco) => {
           editorRef.current = ed;
           monacoRef.current = monaco as typeof import("monaco-editor");

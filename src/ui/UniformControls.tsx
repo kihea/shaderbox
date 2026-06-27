@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { CustomUniform, UniformType } from "../engine/types";
+import type { CustomUniform, ShaderBackend, UniformType } from "../engine/types";
 import { componentCount } from "../engine/uniforms";
 
 interface Props {
   uniforms: CustomUniform[];
+  backend: ShaderBackend;
   onChange: (uniforms: CustomUniform[]) => void;
 }
 
@@ -29,10 +30,13 @@ function sanitizeName(name: string): string {
   return s || "u";
 }
 
-export function UniformControls({ uniforms, onChange }: Props) {
+export function UniformControls({ uniforms, backend, onChange }: Props) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<UniformType>("float");
+
+  // WGSL exposes uniforms as struct members (`u.name`); GLSL as plain globals.
+  const ref = (name: string) => (backend === "webgpu" ? `u.${name}` : name);
 
   function update(i: number, patch: Partial<CustomUniform>) {
     const next = uniforms.map((u, j) => (j === i ? { ...u, ...patch } : u));
@@ -109,14 +113,15 @@ export function UniformControls({ uniforms, onChange }: Props) {
 
       {uniforms.length === 0 && !adding && (
         <p className="hint">
-          No custom uniforms. Add one and use it in WGSL as <code>u.name</code>.
+          No custom uniforms. Add one and use it in your shader as{" "}
+          <code>{ref("name")}</code>.
         </p>
       )}
 
       {uniforms.map((u, i) => (
         <div className="uniform-row" key={u.name}>
           <div className="uniform-row-head">
-            <code title={`u.${u.name} : ${u.type}`}>u.{u.name}</code>
+            <code title={`${ref(u.name)} : ${u.type}`}>{ref(u.name)}</code>
             <span className="utype">{u.type}</span>
             <button className="btn-sm danger" onClick={() => remove(i)}>
               ×

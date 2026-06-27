@@ -2,11 +2,79 @@ import type { Monaco } from "@monaco-editor/react";
 
 let registered = false;
 
-/** Register a lightweight WGSL syntax highlighter with Monaco. */
-export function registerWgsl(monaco: Monaco): void {
+/** Register lightweight WGSL + GLSL syntax highlighters with Monaco. */
+export function registerLanguages(monaco: Monaco): void {
   if (registered) return;
   registered = true;
+  registerWgslImpl(monaco);
+  registerGlslImpl(monaco);
+}
 
+function registerGlslImpl(monaco: Monaco): void {
+  monaco.languages.register({ id: "glsl" });
+  monaco.languages.setLanguageConfiguration("glsl", {
+    comments: { lineComment: "//", blockComment: ["/*", "*/"] },
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"],
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+    ],
+  });
+  monaco.languages.setMonarchTokensProvider("glsl", {
+    keywords: [
+      "void", "bool", "int", "uint", "float", "double", "if", "else", "for",
+      "while", "do", "return", "break", "continue", "discard", "struct",
+      "const", "uniform", "in", "out", "inout", "layout", "precision",
+      "highp", "mediump", "lowp", "true", "false", "switch", "case", "default",
+    ],
+    builtins: [
+      "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4", "uvec2", "uvec3",
+      "uvec4", "mat2", "mat3", "mat4", "sampler2D", "sampler3D", "samplerCube",
+      "gl_Position", "gl_VertexID", "gl_FragCoord", "gl_PointSize",
+    ],
+    functions: [
+      "sin", "cos", "tan", "asin", "acos", "atan", "pow", "exp", "log",
+      "sqrt", "abs", "sign", "floor", "ceil", "fract", "mod", "min", "max",
+      "clamp", "mix", "step", "smoothstep", "length", "distance", "dot",
+      "cross", "normalize", "reflect", "refract", "texture", "textureLod",
+      "dFdx", "dFdy",
+    ],
+    tokenizer: {
+      root: [
+        [/#\w+/, "keyword.directive"],
+        [
+          /[a-zA-Z_]\w*/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@builtins": "type",
+              "@functions": "predefined",
+              "@default": "identifier",
+            },
+          },
+        ],
+        [/\/\/.*$/, "comment"],
+        [/\/\*/, "comment", "@comment"],
+        [/-?\d+\.\d*([eE][-+]?\d+)?[fF]?/, "number.float"],
+        [/-?\d+[uU]?/, "number"],
+        [/[{}()\[\]]/, "@brackets"],
+        [/[<>=!+\-*/%&|^~.?:]+/, "operator"],
+      ],
+      comment: [
+        [/[^/*]+/, "comment"],
+        [/\*\//, "comment", "@pop"],
+        [/[/*]/, "comment"],
+      ],
+    },
+  });
+}
+
+function registerWgslImpl(monaco: Monaco): void {
   monaco.languages.register({ id: "wgsl" });
 
   monaco.languages.setLanguageConfiguration("wgsl", {

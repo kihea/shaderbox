@@ -9,7 +9,12 @@ export function loadProjects(): Project[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as Project[];
+    // migrate older records that predate the `backend` field
+    return (parsed as Project[]).map((p) => ({
+      ...p,
+      backend: p.backend === "webgl2" ? "webgl2" : "webgpu",
+      vertexCount: typeof p.vertexCount === "number" ? p.vertexCount : 3,
+    }));
   } catch {
     return [];
   }
@@ -60,6 +65,7 @@ export function importProjectFile(file: File): Promise<Project> {
         resolve({
           id: `${now.toString(36)}-import`,
           name: typeof obj.name === "string" ? obj.name : "Imported",
+          backend: obj.backend === "webgl2" ? "webgl2" : "webgpu",
           type: obj.type,
           code: obj.code,
           uniforms: Array.isArray(obj.uniforms) ? obj.uniforms : [],

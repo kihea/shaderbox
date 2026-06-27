@@ -1,11 +1,17 @@
-import { useRef } from "react";
-import type { Project, ShaderType } from "../engine/types";
+import { useRef, useState } from "react";
+import {
+  BACKEND_LABEL,
+  BACKEND_TYPES,
+  type Project,
+  type ShaderBackend,
+  type ShaderType,
+} from "../engine/types";
 
 interface Props {
   projects: Project[];
   currentId: string;
   onSelect: (id: string) => void;
-  onNew: (type: ShaderType) => void;
+  onNew: (backend: ShaderBackend, type: ShaderType) => void;
   onDuplicate: () => void;
   onDelete: (id: string) => void;
   onRename: (name: string) => void;
@@ -25,6 +31,7 @@ export function Sidebar({
   onImport,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [backend, setBackend] = useState<ShaderBackend>("webgpu");
   const current = projects.find((p) => p.id === currentId);
 
   return (
@@ -33,10 +40,26 @@ export function Sidebar({
         Shader<span>Box</span>
       </div>
 
-      <div className="new-buttons">
-        <button onClick={() => onNew("fragment")}>+ Fragment</button>
-        <button onClick={() => onNew("compute")}>+ Compute</button>
-        <button onClick={() => onNew("render")}>+ Render</button>
+      <div className="new-block">
+        <div className="seg backend-seg">
+          {(["webgpu", "webgl2"] as ShaderBackend[]).map((b) => (
+            <button
+              key={b}
+              className={backend === b ? "active" : ""}
+              onClick={() => setBackend(b)}
+              title={BACKEND_LABEL[b]}
+            >
+              {b === "webgpu" ? "WGSL" : "GLSL"}
+            </button>
+          ))}
+        </div>
+        <div className="new-buttons">
+          {BACKEND_TYPES[backend].map((t) => (
+            <button key={t} onClick={() => onNew(backend, t)}>
+              + {t[0].toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="project-list">

@@ -4,7 +4,14 @@ import { Preview } from "./ui/Preview";
 import { Sidebar } from "./ui/Sidebar";
 import { UniformControls } from "./ui/UniformControls";
 import { defaultCode, newProject } from "./engine/defaults";
-import type { CustomUniform, Project, ShaderError, ShaderType } from "./engine/types";
+import {
+  BACKEND_TYPES,
+  type CustomUniform,
+  type Project,
+  type ShaderBackend,
+  type ShaderError,
+  type ShaderType,
+} from "./engine/types";
 import {
   exportProject,
   importProjectFile,
@@ -26,7 +33,6 @@ export default function App() {
   const [fps, setFps] = useState(0);
   const [paused, setPaused] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
-  const [unsupported, setUnsupported] = useState<string | null>(null);
 
   // ensure a valid selection
   useEffect(() => {
@@ -61,8 +67,8 @@ export default function App() {
     [current?.id],
   );
 
-  const onNew = (type: ShaderType) => {
-    const p = newProject(type);
+  const onNew = (backend: ShaderBackend, type: ShaderType) => {
+    const p = newProject(backend, type);
     p.name = `${type[0].toUpperCase()}${type.slice(1)} ${projects.length + 1}`;
     setProjects((prev) => [...prev, p]);
     setCurrentId(p.id);
@@ -70,7 +76,10 @@ export default function App() {
 
   const onDuplicate = () => {
     if (!current) return;
-    const copy = { ...newProject(current.type), name: current.name + " copy" };
+    const copy = {
+      ...newProject(current.backend, current.type),
+      name: current.name + " copy",
+    };
     copy.code = current.code;
     copy.uniforms = current.uniforms.map((u) => ({ ...u, value: [...u.value] }));
     copy.vertexCount = current.vertexCount;
@@ -98,18 +107,13 @@ export default function App() {
   const changeType = (type: ShaderType) => {
     if (!current) return;
     // swap to the default for the new type only if code is still pristine
-    const pristine = current.code.trim() === defaultCode(current.type).trim();
-    patchCurrent({ type, code: pristine ? defaultCode(type) : current.code });
+    const pristine =
+      current.code.trim() === defaultCode(current.backend, current.type).trim();
+    patchCurrent({
+      type,
+      code: pristine ? defaultCode(current.backend, type) : current.code,
+    });
   };
-
-  if (unsupported) {
-    return (
-      <div className="unsupported">
-        <h1>ShaderBox</h1>
-        <p>{unsupported}</p>
-      </div>
-    );
-  }
 
   if (!current) return null;
 
@@ -132,8 +136,11 @@ export default function App() {
 
       <main className="main">
         <div className="topbar">
+          <span className="backend-tag" title="Sandbox backend">
+            {current.backend === "webgpu" ? "WGSL" : "GLSL"}
+          </span>
           <div className="seg">
-            {(["fragment", "compute", "render"] as ShaderType[]).map((t) => (
+            {BACKEND_TYPES[current.backend].map((t) => (
               <button
                 key={t}
                 className={current.type === t ? "active" : ""}
@@ -170,6 +177,7 @@ export default function App() {
           <div className="left">
             <Editor
               code={current.code}
+              backend={current.backend}
               errors={errors}
               onChange={(code) => patchCurrent({ code })}
             />
@@ -194,15 +202,16 @@ export default function App() {
 
           <div className="right">
             <Preview
+              key={current.backend}
               project={current}
               paused={paused}
               onErrors={setErrors}
               onFps={setFps}
-              onUnsupported={setUnsupported}
               resetSignal={resetSignal}
             />
             <UniformControls
               uniforms={current.uniforms}
+              backend={current.backend}
               onChange={(uniforms: CustomUniform[]) => patchCurrent({ uniforms })}
             />
           </div>
@@ -213,7 +222,7 @@ export default function App() {
 }
 
 function seed(): Project {
-  const p = newProject("fragment");
+  const p = newProject("webgpu", "fragment");
   p.name = "Welcome";
   return p;
 }

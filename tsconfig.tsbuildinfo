@@ -1,1 +1,0 @@
-{"root":["./src/App.tsx","./src/main.tsx","./src/engine/WebGPUEngine.ts","./src/engine/defaults.ts","./src/engine/types.ts","./src/engine/uniforms.ts","./src/storage/store.ts","./src/ui/Editor.tsx","./src/ui/Preview.tsx","./src/ui/Sidebar.tsx","./src/ui/UniformControls.tsx","./src/ui/wgslLanguage.ts"],"version":"5.9.3"}

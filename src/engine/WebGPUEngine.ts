@@ -1,4 +1,4 @@
-import type { Project, ShaderError } from "./types";
+import type { EngineCallbacks, IEngine, Project, ShaderError } from "./types";
 import {
   buildUniformLayout,
   packUniforms,
@@ -49,12 +49,7 @@ fn fs(in: VOut) -> @location(0) vec4f {
 }
 `;
 
-export interface EngineCallbacks {
-  onErrors?: (errors: ShaderError[]) => void;
-  onFps?: (fps: number) => void;
-}
-
-export class WebGPUEngine {
+export class WebGPUEngine implements IEngine {
   private canvas: HTMLCanvasElement;
   private device!: GPUDevice;
   private context!: GPUCanvasContext;
@@ -214,9 +209,16 @@ export class WebGPUEngine {
     label: string,
   ): Promise<{ module: GPUShaderModule; errors: ShaderError[]; preludeLines: number }> {
     const module = this.device.createShaderModule({ code, label });
-    const info = await module.getCompilationInfo();
     // count prelude lines to translate WGSL line numbers back to user code
     const preludeLines = this.currentPreludeLineCount;
+    let info: GPUCompilationInfo;
+    try {
+      info = await module.getCompilationInfo();
+    } catch {
+      // device/instance lost during compilation — the device.lost handler
+      // reports the real cause; don't surface the low-level wire error here.
+      return { module, errors: [], preludeLines };
+    }
     const errors: ShaderError[] = info.messages
       .filter((m) => m.type === "error" || m.type === "warning")
       .map((m) => ({
@@ -244,7 +246,7 @@ export class WebGPUEngine {
   }
 
   private async rebuild(): Promise<void> {
-    if (!this.project || !this.layout) return;
+    if (this.disposed || !this.project || !this.layout) return;
     const p = this.project;
 
     // (Re)create uniform buffer if size changed.
@@ -306,9 +308,13 @@ export class WebGPUEngine {
       this.cb.onErrors?.([{ message: String(err), type: "error" }]);
     }
 
-    const scoped = await this.device.popErrorScope();
-    if (scoped) {
-      this.cb.onErrors?.([{ message: scoped.message, type: "error" }]);
+    try {
+      const scoped = await this.device.popErrorScope();
+      if (scoped && !this.disposed) {
+        this.cb.onErrors?.([{ message: scoped.message, type: "error" }]);
+      }
+    } catch {
+      // device/instance may have been dropped during teardown — ignore
     }
   }
 
