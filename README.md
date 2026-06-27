@@ -13,8 +13,16 @@ side by side in the same project list.
 ## Features
 
 - **Three shader modes** — fragment (fullscreen, Shadertoy-like), compute
-  (writes a storage texture that's blitted to screen, WGSL only), and render
-  (your own vertex + fragment stages).
+  (writes a storage texture, WGSL only), and render (your own vertex + fragment
+  stages).
+- **Multipass buffers** — a project is an ordered list of passes. The last pass
+  is the **Image** (renders to screen); earlier ones are **Buffer A/B/…** that
+  render to offscreen textures and are double-buffered, so a pass can read its
+  own previous frame (feedback).
+- **iChannels** — each pass has 4 input channels (`iChannel0..3`) bindable to
+  another pass's output or an uploaded image. A compute pass's output texture is
+  bindable as a channel too, so compute results can feed a later fragment or
+  render pass.
 - **Monaco code editor**, bundled locally (works fully offline) with WGSL and
   GLSL syntax highlighting and inline compile-error squiggles.
 - **Custom "outside" variables** — add `float` / `vec2` / `vec3` / `vec4` /
@@ -46,10 +54,18 @@ A hidden prelude is injected before your code so you can focus on the
 interesting part. The prelude exposes the uniforms (built-ins plus your custom
 ones) and, depending on the mode, the entry points you implement.
 
+Every pass also gets a sampler and four input textures. In WGSL:
+`iSampler` (binding 1) and `iChannel0..3` (bindings 2–5); compute passes also
+get `outImage` (binding 6). In GLSL: `uniform sampler2D iChannel0..3` and
+`uniform vec2 iChannelResolution[4]`. Sample a channel with
+`textureSample(iChannel0, iSampler, in.uv)` (WGSL) or `texture(iChannel0, uv)`
+(GLSL).
+
 ### WGSL (WebGPU)
 
 The uniforms are a struct bound at `@group(0) @binding(0)`, referenced as
-`u.<name>` (e.g. `u.time`, `u.resolution`, and any custom uniform `u.myValue`).
+`u.<name>` (e.g. `u.time`, `u.resolution`, `u.channelRes0`, and any custom
+uniform `u.myValue`).
 
 | Mode      | You write                                              | Prelude also provides |
 |-----------|--------------------------------------------------------|-----------------------|
@@ -87,10 +103,14 @@ src/
     WebGL2Engine.ts   WebGL2/GLSL renderer (fragment, render)
   ui/
     Preview.tsx       owns the canvas + engine for the active sandbox
-    Editor.tsx        Monaco editor + error markers
-    UniformControls.tsx  custom-uniform sliders / color pickers
+    Editor.tsx        Monaco editor + error markers (per active pass)
+    PassBar.tsx       pass tabs, per-pass type, add/delete buffer
+    InspectorPanel.tsx  tabbed Channels / Uniforms / Assets panel
+    ChannelControls.tsx iChannel binding selectors
+    AssetManager.tsx  image upload + library
+    UniformControls.tsx custom-uniform sliders / color pickers
     Sidebar.tsx       project list, new/duplicate/export/import
     wgslLanguage.ts   Monaco WGSL + GLSL grammars
-  storage/store.ts    localStorage persistence + JSON export/import
+  storage/store.ts    localStorage persistence + JSON export/import (+migration)
   App.tsx             app shell + state
 ```

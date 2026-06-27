@@ -70,8 +70,14 @@ export function Sidebar({
             className={"project-item" + (p.id === currentId ? " active" : "")}
             onClick={() => onSelect(p.id)}
           >
-            <span className={"badge badge-" + p.type}>{p.type[0].toUpperCase()}</span>
+            <span
+              className={"badge badge-" + p.backend}
+              title={p.backend === "webgpu" ? "WGSL" : "GLSL"}
+            >
+              {p.backend === "webgpu" ? "W" : "G"}
+            </span>
             <span className="pname">{p.name}</span>
+            {p.passes.length > 1 && <span className="pcount">{p.passes.length}</span>}
             <button
               className="btn-sm danger"
               title="Delete"

@@ -1,25 +1,29 @@
-import type { Project, ShaderBackend, ShaderType } from "./types";
+import {
+  emptyChannels,
+  type Pass,
+  type Project,
+  type ShaderBackend,
+  type ShaderType,
+} from "./types";
 
 /**
- * WGSL (WebGPU) injects a hidden prelude before the user's code:
- *
- *   struct Uniforms { resolution, time, timeDelta, frame, mouse, ...customs };
+ * WGSL (WebGPU) prelude exposes, for every pass:
+ *   struct Uniforms { resolution, time, timeDelta, frame, mouse,
+ *                     channelRes0..3, ...customs };
  *   @group(0) @binding(0) var<uniform> u: Uniforms;
+ *   @group(0) @binding(1) var iSampler: sampler;
+ *   @group(0) @binding(2..5) var iChannel0..3: texture_2d<f32>;
+ *   // compute passes also get binding(6) outImage: storage texture
  *
- * fragment: prelude also defines `VertexOutput` + `vs_main` (fullscreen
- *           triangle). You write `fs_main(in: VertexOutput) -> @location(0) vec4f`.
- * compute:  prelude also defines binding(1) `outImage`
- *           (texture_storage_2d<rgba8unorm, write>). You write `cs_main`.
- * render:   prelude defines only uniforms. You write `vs_main` + `fs_main`.
- *
- * GLSL (WebGL2) injects `#version 300 es`, a `precision` line, and the same set
- * of uniforms as plain globals: `resolution`, `time`, `timeDelta`, `frame`,
- * `mouse`, plus any customs. No compute (the stage does not exist in WebGL2).
+ * GLSL (WebGL2) prelude exposes plain globals: resolution, time, timeDelta,
+ * frame, mouse, iChannelResolution[4], custom uniforms, and
+ * uniform sampler2D iChannel0..3.
  */
 
 // ---------------------------------------------------------------- WGSL
-const WGSL_FRAGMENT = `// Fragment mode — write fs_main. Available: u.time, u.resolution,
-// u.mouse (xy = cursor px, zw = last click px), in.uv in [0,1], in.pos.
+const WGSL_FRAGMENT = `// Fragment pass — write fs_main. Sample inputs with
+// textureSample(iChannel0, iSampler, in.uv). Built-ins: u.time, u.resolution,
+// u.mouse (xy cursor px, zw last click), u.channelRes0..3.
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
   let uv = in.uv;
@@ -39,8 +43,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 }
 `;
 
-const WGSL_COMPUTE = `// Compute mode — write to outImage with textureStore.
-// Dispatched over the canvas in 8x8 workgroups; the result is blitted to screen.
+const WGSL_COMPUTE = `// Compute pass — write to outImage with textureStore. Its output texture
+// can be bound as an iChannel of a later pass. Read inputs with
+// textureLoad(iChannel0, vec2i(gid.xy), 0).
 @compute @workgroup_size(8, 8)
 fn cs_main(@builtin(global_invocation_id) gid: vec3u) {
   let dims = vec2f(u.resolution);
@@ -52,7 +57,7 @@ fn cs_main(@builtin(global_invocation_id) gid: vec3u) {
 }
 `;
 
-const WGSL_RENDER = `// Render mode — write vs_main + fs_main. Draws \`vertexCount\` vertices.
+const WGSL_RENDER = `// Render pass — write vs_main + fs_main. Draws \`vertexCount\` vertices.
 struct VSOut {
   @builtin(position) pos: vec4f,
   @location(0) color: vec3f,
@@ -75,8 +80,9 @@ fn fs_main(in: VSOut) -> @location(0) vec4f {
 `;
 
 // ---------------------------------------------------------------- GLSL
-const GLSL_FRAGMENT = `// Fragment mode (GLSL ES 3.00) — write main(), assign to fragColor.
-// Available: time, resolution, mouse (xy cursor px, zw last click px), uv in [0,1].
+const GLSL_FRAGMENT = `// Fragment pass (GLSL ES 3.00) — write main(), assign fragColor.
+// Sample inputs with texture(iChannel0, uv). Built-ins: time, resolution,
+// mouse (xy cursor, zw last click), iChannelResolution[4], uv in [0,1].
 void main() {
   vec2 p = uv * 6.0;
   float t = time;
@@ -90,12 +96,7 @@ void main() {
 }
 `;
 
-/**
- * GLSL render mode keeps both stages in one editor, separated by a line that
- * starts with `//--- fragment`. Text above it is the vertex shader body, below
- * is the fragment shader. Both share the uniform prelude.
- */
-const GLSL_RENDER = `// Render mode (GLSL) — vertex stage below, fragment stage after the marker.
+const GLSL_RENDER = `// Render pass (GLSL) — vertex stage below, fragment after the marker.
 // Draws \`vertexCount\` vertices using gl_VertexID (no vertex buffers needed).
 out vec3 vColor;
 void main() {
@@ -118,26 +119,48 @@ export function defaultCode(backend: ShaderBackend, type: ShaderType): string {
     if (type === "render") return WGSL_RENDER;
     return WGSL_FRAGMENT;
   }
-  // webgl2
   if (type === "render") return GLSL_RENDER;
   return GLSL_FRAGMENT;
 }
 
 let counter = 0;
+function uid(tag: string): string {
+  return `${Date.now().toString(36)}-${(counter++).toString(36)}-${tag}`;
+}
+
+export function newPass(
+  backend: ShaderBackend,
+  type: ShaderType,
+  name: string,
+): Pass {
+  return {
+    id: uid("pass"),
+    name,
+    type,
+    code: defaultCode(backend, type),
+    channels: emptyChannels(),
+    vertexCount: 3,
+  };
+}
+
 export function newProject(
   backend: ShaderBackend = "webgpu",
   type: ShaderType = "fragment",
 ): Project {
   const now = Date.now();
   return {
-    id: `${now.toString(36)}-${(counter++).toString(36)}`,
+    id: uid("proj"),
     name: "Untitled",
     backend,
-    type,
-    code: defaultCode(backend, type),
+    passes: [newPass(backend, type, "Image")],
     uniforms: [],
-    vertexCount: 3,
+    images: [],
     createdAt: now,
     updatedAt: now,
   };
+}
+
+/** Letter label for buffer passes: A, B, C… */
+export function bufferLabel(index: number): string {
+  return String.fromCharCode(65 + index);
 }

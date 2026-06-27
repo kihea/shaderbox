@@ -46,6 +46,10 @@ const BUILTINS: { name: string; type: UniformType }[] = [
   { name: "timeDelta", type: "float" },
   { name: "frame", type: "float" },
   { name: "mouse", type: "vec4" },
+  { name: "channelRes0", type: "vec2" },
+  { name: "channelRes1", type: "vec2" },
+  { name: "channelRes2", type: "vec2" },
+  { name: "channelRes3", type: "vec2" },
 ];
 
 function roundUp(n: number, multiple: number): number {
@@ -88,6 +92,8 @@ export function packUniforms(
     timeDelta: number;
     frame: number;
     mouse: [number, number, number, number];
+    /** Resolution of each of the 4 channels (0,0 when unbound). */
+    channelRes: [number, number][];
   },
   customValues: Record<string, number[]>,
 ): Float32Array {
@@ -98,6 +104,10 @@ export function packUniforms(
     timeDelta: [builtins.timeDelta],
     frame: [builtins.frame],
     mouse: builtins.mouse,
+    channelRes0: builtins.channelRes[0] ?? [0, 0],
+    channelRes1: builtins.channelRes[1] ?? [0, 0],
+    channelRes2: builtins.channelRes[2] ?? [0, 0],
+    channelRes3: builtins.channelRes[3] ?? [0, 0],
   };
 
   for (const f of layout.fields) {
