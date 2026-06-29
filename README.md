@@ -30,6 +30,10 @@ side by side in the same project list.
   pickers while the shader runs. No recompile needed to change a value.
 - **Built-in uniforms** available to every shader: `resolution`, `time`,
   `timeDelta`, `frame`, and `mouse` (xy = cursor, zw = last click).
+- **Inputs menu** — a topbar dropdown that lists every input available to the
+  active pass (built-ins, channels with their current bindings, and custom
+  uniforms), backend-aware, and inserts the token at the cursor on click. No
+  need to remember names from a comment.
 - **Save / load** — everything is persisted to `localStorage` automatically.
   Export any shader to a `.json` file and import it back to share.
 - **Playback controls** — pause, reset time, and a live FPS readout.

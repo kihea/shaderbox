@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Editor } from "./ui/Editor";
+import { Editor, type EditorApi } from "./ui/Editor";
 import { Preview } from "./ui/Preview";
 import { Sidebar } from "./ui/Sidebar";
 import { PassBar } from "./ui/PassBar";
 import { InspectorPanel } from "./ui/InspectorPanel";
+import { InputsMenu } from "./ui/InputsMenu";
 import { bufferLabel, defaultCode, newPass, newProject } from "./engine/defaults";
 import type {
   Channel,
@@ -35,6 +36,7 @@ export default function App() {
   const [fps, setFps] = useState(0);
   const [paused, setPaused] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
+  const editorApi = useRef<EditorApi | null>(null);
 
   useEffect(() => {
     if (!projects.find((p) => p.id === currentId)) setCurrentId(projects[0]?.id ?? "");
@@ -206,6 +208,11 @@ export default function App() {
           <span className="backend-tag" title="Sandbox backend">
             {current.backend === "webgpu" ? "WGSL" : "GLSL"}
           </span>
+          <InputsMenu
+            project={current}
+            pass={activePass}
+            onInsert={(token) => editorApi.current?.insert(token)}
+          />
           <div className="spacer" />
           <button onClick={() => setPaused((p) => !p)}>{paused ? "▶ Play" : "❚❚ Pause"}</button>
           <button onClick={() => setResetSignal((s) => s + 1)}>↺ Reset</button>
@@ -231,6 +238,7 @@ export default function App() {
               backend={current.backend}
               errors={passErrors}
               onChange={(code) => patchActive({ code })}
+              onReady={(api) => (editorApi.current = api)}
             />
             <div className={"status" + (errorList.length ? " has-error" : "")}>
               {errorList.length === 0 && warnList.length === 0 && <span className="ok">✓ compiled</span>}

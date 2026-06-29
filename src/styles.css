@@ -200,6 +200,89 @@ code {
   border-radius: 5px;
   padding: 3px 7px;
 }
+
+/* ---------- inputs menu ---------- */
+.inputs-menu {
+  position: relative;
+}
+.inputs-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  width: 360px;
+  max-height: 460px;
+  overflow-y: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  padding: 8px;
+}
+.inputs-pop-head {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 2px 6px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.inputs-group {
+  margin-bottom: 8px;
+}
+.inputs-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding: 2px 6px;
+}
+.inputs-hint {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+.inputs-item {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+.inputs-item:hover {
+  background: var(--accent-2);
+}
+.inputs-item code {
+  color: var(--accent);
+  font-size: 12px;
+}
+.inputs-item .itype {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-family: ui-monospace, monospace;
+}
+.inputs-item .idesc {
+  color: var(--text);
+  font-size: 11px;
+  opacity: 0.8;
+}
+.inputs-item .ibind {
+  color: var(--ok);
+  font-style: normal;
+}
+.inputs-item .ibind.dim {
+  color: var(--muted);
+  opacity: 0.7;
+}
 .seg {
   display: flex;
   border: 1px solid var(--border);
