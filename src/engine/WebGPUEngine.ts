@@ -154,14 +154,15 @@ export class WebGPUEngine implements IEngine {
       ],
     });
     const C = GPUShaderStage.COMPUTE;
+    // Channels are rgba8unorm (filterable), and we bind a linear/filtering
+    // sampler, so the compute layout must match the render layout's filtering
+    // sampler + float textures — only the visibility and the extra storage
+    // binding differ.
     this.computeBGL = d.createBindGroupLayout({
       entries: [
         { binding: 0, visibility: C, buffer: { type: "uniform" } },
-        { binding: 1, visibility: C, sampler: { type: "non-filtering" } },
-        ...texEntries(C, 2).map((e) => ({
-          ...e,
-          texture: { sampleType: "unfilterable-float" as const, viewDimension: "2d" as const },
-        })),
+        { binding: 1, visibility: C, sampler: { type: "filtering" } },
+        ...texEntries(C, 2),
         {
           binding: 6,
           visibility: C,
