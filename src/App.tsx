@@ -6,6 +6,7 @@ import { PassBar } from "./ui/PassBar";
 import { InspectorPanel } from "./ui/InspectorPanel";
 import { InputsMenu } from "./ui/InputsMenu";
 import { bufferLabel, defaultCode, newPass, newProject } from "./engine/defaults";
+import { EXAMPLES, instantiateExample } from "./engine/examples";
 import type {
   Channel,
   CustomUniform,
@@ -142,6 +143,15 @@ export default function App() {
     setActivePassId(p.passes[0].id);
   };
 
+  const onLoadExample = (exampleId: string) => {
+    const tpl = EXAMPLES.find((e) => e.id === exampleId);
+    if (!tpl) return;
+    const p = instantiateExample(tpl);
+    setProjects((prev) => [...prev, p]);
+    setCurrentId(p.id);
+    setActivePassId(p.passes[p.passes.length - 1].id);
+  };
+
   const onDuplicate = () => {
     if (!current) return;
     const copy = newProject(current.backend);
@@ -196,6 +206,7 @@ export default function App() {
         currentId={current.id}
         onSelect={setCurrentId}
         onNew={onNew}
+        onLoadExample={onLoadExample}
         onDuplicate={onDuplicate}
         onDelete={onDelete}
         onRename={(name) => patchCurrent({ name })}

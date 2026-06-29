@@ -105,6 +105,48 @@ code {
   padding: 6px 2px;
   font-size: 11px;
 }
+.examples-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.examples-toggle {
+  text-align: left;
+}
+.examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.example-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 6px 8px;
+  background: var(--bg);
+}
+.ex-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.ex-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #06101f;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+.ex-desc {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: normal;
+}
 .project-list {
   flex: 1;
   overflow-y: auto;

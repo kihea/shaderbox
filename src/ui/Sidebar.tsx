@@ -6,12 +6,14 @@ import {
   type ShaderBackend,
   type ShaderType,
 } from "../engine/types";
+import { EXAMPLES } from "../engine/examples";
 
 interface Props {
   projects: Project[];
   currentId: string;
   onSelect: (id: string) => void;
   onNew: (backend: ShaderBackend, type: ShaderType) => void;
+  onLoadExample: (exampleId: string) => void;
   onDuplicate: () => void;
   onDelete: (id: string) => void;
   onRename: (name: string) => void;
@@ -24,6 +26,7 @@ export function Sidebar({
   currentId,
   onSelect,
   onNew,
+  onLoadExample,
   onDuplicate,
   onDelete,
   onRename,
@@ -32,6 +35,7 @@ export function Sidebar({
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [backend, setBackend] = useState<ShaderBackend>("webgpu");
+  const [examplesOpen, setExamplesOpen] = useState(false);
   const current = projects.find((p) => p.id === currentId);
 
   return (
@@ -59,6 +63,34 @@ export function Sidebar({
               + {t[0].toUpperCase() + t.slice(1)}
             </button>
           ))}
+        </div>
+        <div className="examples-block">
+          <button className="examples-toggle" onClick={() => setExamplesOpen((o) => !o)}>
+            ★ Examples {examplesOpen ? "▴" : "▾"}
+          </button>
+          {examplesOpen && (
+            <div className="examples-list">
+              {EXAMPLES.map((ex) => (
+                <button
+                  key={ex.id}
+                  className="example-item"
+                  title={ex.description}
+                  onClick={() => {
+                    onLoadExample(ex.id);
+                    setExamplesOpen(false);
+                  }}
+                >
+                  <span className="ex-title">
+                    {ex.title}
+                    <span className={"ex-badge badge-" + ex.backend}>
+                      {ex.backend === "webgpu" ? "WGSL" : "GLSL"}
+                    </span>
+                  </span>
+                  <span className="ex-desc">{ex.description}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
