@@ -34,6 +34,8 @@ side by side in the same project list.
   active pass (built-ins, channels with their current bindings, and custom
   uniforms), backend-aware, and inserts the token at the cursor on click. No
   need to remember names from a comment.
+- **Examples** — a sidebar gallery (compute→render, plasma-on-a-triangle,
+  GLSL feedback buffer); each loads as a fresh, editable project.
 - **Save / load** — everything is persisted to `localStorage` automatically.
   Export any shader to a `.json` file and import it back to share.
 - **Playback controls** — pause, reset time, and a live FPS readout.
