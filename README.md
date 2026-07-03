@@ -1,9 +1,9 @@
 # ShaderBox
 
 A local, Shadertoy-style playground for writing, previewing, and saving shaders
-— right in your browser, no account, no server. Pick a backend per sandbox:
+created for a bit more flexibility and utility on top of shader toy. Functional with both:
 
-- **WebGPU · WGSL** — fragment, **compute**, and render (vertex+fragment) shaders.
+- **WebGPU · WGSL** — fragment, **compute**, and render (vertex+fragment) shaders and
 - **WebGL2 · GLSL** — fragment and render shaders (GLSL ES 3.00).
 
 ## Features
