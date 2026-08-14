@@ -1,5 +1,11 @@
 # ShaderBox
 
+**[Try it live](https://kihea.github.io/shaderbox/)** — runs entirely in your
+browser. WebGPU (WGSL) needs recent Chrome/Edge; the WebGL2 (GLSL) backend
+works everywhere.
+
+![ShaderBox screenshot](docs/screenshot.png)
+
 A local, Shadertoy-style playground for writing, previewing, and saving shaders
 — right in your browser, no account, no server. Pick a backend per sandbox:
 
