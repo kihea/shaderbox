@@ -3,3 +3,12 @@ dist
 *.log
 .DS_Store
 *.tsbuildinfo
+build/
+.env
+.env.*
+*.env.txt
+.claude/
+.playwright-cli/
+output/
+__pycache__/
+.venv/

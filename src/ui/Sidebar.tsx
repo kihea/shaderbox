@@ -45,26 +45,7 @@ export function Sidebar({
       </div>
 
       <div className="new-block">
-        <div className="seg backend-seg">
-          {(["webgpu", "webgl2"] as ShaderBackend[]).map((b) => (
-            <button
-              key={b}
-              className={backend === b ? "active" : ""}
-              onClick={() => setBackend(b)}
-              title={BACKEND_LABEL[b]}
-            >
-              {b === "webgpu" ? "WGSL" : "GLSL"}
-            </button>
-          ))}
-        </div>
-        <div className="new-buttons">
-          {BACKEND_TYPES[backend].map((t) => (
-            <button key={t} onClick={() => onNew(backend, t)}>
-              + {t[0].toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="examples-block">
+      <div className="examples-block">
           <button className="examples-toggle" onClick={() => setExamplesOpen((o) => !o)}>
             ★ Examples {examplesOpen ? "▴" : "▾"}
           </button>
@@ -92,6 +73,26 @@ export function Sidebar({
             </div>
           )}
         </div>
+        <div className="seg backend-seg">
+          {(["webgpu", "webgl2"] as ShaderBackend[]).map((b) => (
+            <button
+              key={b}
+              className={backend === b ? "active" : ""}
+              onClick={() => setBackend(b)}
+              title={BACKEND_LABEL[b]}
+            >
+              {b === "webgpu" ? "WGSL" : "GLSL"}
+            </button>
+          ))}
+        </div>
+        <div className="new-buttons">
+          {BACKEND_TYPES[backend].map((t) => (
+            <button key={t} onClick={() => onNew(backend, t)}>
+              + {t[0].toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+        
       </div>
 
       <div className="project-list">

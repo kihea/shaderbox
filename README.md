@@ -1,10 +1,14 @@
 # ShaderBox
 
 A local, Shadertoy-style playground for writing, previewing, and saving shaders
-created for a bit more flexibility and utility on top of shader toy. Functional with both:
+— right in your browser, no account, no server. Pick a backend per sandbox:
 
-- **WebGPU · WGSL** — fragment, **compute**, and render (vertex+fragment) shaders and
-- **WebGL2 · GLSL** — fragment and render shaders (GLSL ES 3.00).
+- **WebGPU · WGSL** — fragment, **compute**, and render (vertex+fragment) shaders.
+- **WebGL2 · GLSL** — fragment and render shaders (GLSL ES 3.00). No compute
+  stage exists in WebGL2, so compute is WebGPU-only.
+
+Each sandbox remembers which backend it targets, so GLSL and WGSL shaders live
+side by side in the same project list.
 
 ## Features
 
@@ -50,6 +54,40 @@ Build a static bundle with `npm run build` and preview it with `npm run preview`
 > tells you and you can still use the WebGL2 (GLSL) backend, which works
 > everywhere WebGL2 does.
 
+## How a shader is wired up
+
+A hidden prelude is injected before your code so you can focus on the
+interesting part. The prelude exposes the uniforms (built-ins plus your custom
+ones) and, depending on the mode, the entry points you implement.
+
+Every pass also gets a sampler and four input textures. In WGSL:
+`iSampler` (binding 1) and `iChannel0..3` (bindings 2–5); compute passes also
+get `outImage` (binding 6). In GLSL: `uniform sampler2D iChannel0..3` and
+`uniform vec2 iChannelResolution[4]`. Sample a channel with
+`textureSample(iChannel0, iSampler, in.uv)` (WGSL) or `texture(iChannel0, uv)`
+(GLSL).
+
+### WGSL (WebGPU)
+
+The uniforms are a struct bound at `@group(0) @binding(0)`, referenced as
+`u.<name>` (e.g. `u.time`, `u.resolution`, `u.channelRes0`, and any custom
+uniform `u.myValue`).
+
+| Mode      | You write                                              | Prelude also provides |
+|-----------|--------------------------------------------------------|-----------------------|
+| fragment  | `fs_main(in: VertexOutput) -> @location(0) vec4f`      | `vs_main` (fullscreen triangle), `in.uv`, `in.pos` |
+| compute   | `@compute @workgroup_size(8,8) fn cs_main(...)`        | `outImage: texture_storage_2d<rgba8unorm, write>` |
+| render    | `vs_main` + `fs_main`                                   | uniforms only; draws `vertexCount` vertices |
+
+### GLSL (WebGL2)
+
+The uniforms are plain globals (`time`, `resolution`, `mouse`, and any custom
+uniform `myValue`). Shaders are GLSL ES 3.00.
+
+| Mode      | You write                                              | Notes |
+|-----------|--------------------------------------------------------|-------|
+| fragment  | `void main()` assigning `fragColor`                    | `uv` in `[0,1]` provided |
+| render    | vertex stage, then a `//--- fragment` marker line, then the fragment stage | both stages share the uniform set; draws `vertexCount` vertices via `gl_VertexID` |
 
 ## Tech
 
